@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # encoding: utf-8
 """
-    @File       : DCMReader.py
+    @File       : DCMProcess.py
     @Time       : 2022/1/7 15:48
     @Author     : Haoran Jia
     @license    : Copyright(c) 2022 Haoran Jia. All rights reserved.
@@ -9,18 +9,14 @@
     @Description：
 """
 
-from utlis import folderControl
-from utlis import DCMReader
 import SimpleITK as sitk
 
-folder = "dataset/S0006/P0566783_2020-02-12"
-folders = folderControl.all_folders("dataset")
+import utlis.folderControl
+from utlis import folderControl
+from utlis import DCMProcess
+import ZS_Aorta
 
-for folder in folders:
-    reader = DCMReader.DCMSeriesReader(folder)
-    reader.Execute()
-    reader.Distinguish()
-    print(folder)
-    print(reader.infos)
+# utlis.folderControl.patient_folder("F:\\ZS_Aorta")
 
+ZS_Aorta.loop("F:\\ZS_Aorta")
 

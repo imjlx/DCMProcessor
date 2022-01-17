@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # encoding: utf-8
 """
-    @File       : DCMReader.py
+    @File       : DCMProcess.py
     @Time       : 2022/1/5 14:32
     @Author     : Haoran Jia
     @license    : Copyright(c) 2022 Haoran Jia. All rights reserved.
