@@ -32,6 +32,7 @@ class DCMSerieProcessor(object):
         self.load_series_fnames()
         # 序列数量
         self.N = len(self.series_fnames)
+        self.N_files = [len(fnames) for fnames in self.series_fnames]
 
         # 需要的序列
         self.serie_ID = None
@@ -52,8 +53,8 @@ class DCMSerieProcessor(object):
         """
         self.series_ID = sitk.ImageSeriesReader.GetGDCMSeriesIDs(self.folder)
         for serie_ID in self.series_ID:
-            serie_file_names = sitk.ImageSeriesReader.GetGDCMSeriesFileNames(self.folder, serie_ID)
-            self.series_fnames.append(serie_file_names)
+            serie_fnames = sitk.ImageSeriesReader.GetGDCMSeriesFileNames(self.folder, serie_ID)
+            self.series_fnames.append(serie_fnames)
 
     def find_target_serie(self, method="Longest"):
 
@@ -91,11 +92,6 @@ class DCMSerieProcessor(object):
         self.origin = self.img.GetOrigin()
         self.direction = self.img.GetDirection()
 
-        print(self.size)
-        print(self.spacing)
-        print(self.origin)
-        print(self.direction)
-
     def clip(self):
         arr = sitk.GetArrayFromImage(self.img)
         arr = np.clip(arr, -1024, 3071)
@@ -112,8 +108,7 @@ class DCMSerieProcessor(object):
         resampler.SetDefaultPixelValue(-1024)
         self.img = resampler.Execute(self.img)
 
-    def write(self, folder, fname):
-        fpath = os.path.join(folder, fname)
+    def write(self, fpath):
         sitk.WriteImage(self.img, fpath)
 
 
