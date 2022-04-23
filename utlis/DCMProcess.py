@@ -93,13 +93,23 @@ class DCMSerieProcessor(object):
         self.direction = self.img.GetDirection()
 
     def clip(self):
+        """
+        将图像的范围裁剪到-1024到3071之间
+        :return: 裁剪后的图像
+        """
         arr = sitk.GetArrayFromImage(self.img)
         arr = np.clip(arr, -1024, 3071)
         img = sitk.GetImageFromArray(arr)
         img.CopyInformation(self.img)
         self.img = img
+        return img
 
     def resample(self, img_reference):
+        """
+        根据参考图像对图像进行重采样
+        :param img_reference: 参考图像
+        :return: 无
+        """
         resampler = sitk.ResampleImageFilter()
         resampler.SetReferenceImage(img_reference)
         resampler.SetInterpolator(sitk.sitkLinear)
