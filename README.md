@@ -1,2 +1,2 @@
-# LearnSimpleITK
-Learning notes about SimpleITK for medical imaging
+# DCMProcessor
+My higher-level DICOM files' Processors based on SimpleITK.

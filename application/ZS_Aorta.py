@@ -6,7 +6,7 @@
     @Author     : Haoran Jia
     @license    : Copyright(c) 2022 Haoran Jia. All rights reserved.
     @contact    : 21211140001@fudan.m.edu.cn
-    @Description：
+    @Description:
 """
 import re
 import os
@@ -14,7 +14,7 @@ import time
 
 import pandas as pd
 
-from utlis.DCMProcess import DCMSerieProcessor
+from utlis.DCMProcess import DCMSeriesProcessor
 
 # 不同分割对应的文件夹名
 SEG_FOLDER = {
@@ -126,7 +126,7 @@ class PatientProcessor(object):
         :return: 读取ct的DCMSerieProcessor类
         """
         folder = os.path.join(self.folder, sub_folder)
-        self.processor_ct = DCMSerieProcessor(folder)
+        self.processor_ct = DCMSeriesProcessor(folder)
         self.processor_ct.read()
         self.processor_ct.clip()
         return self.processor_ct
@@ -150,7 +150,7 @@ class PatientProcessor(object):
         :return: 读取图像的DCMSerieProcessor类
         """
         folder = os.path.join(self.folder, SEG_FOLDER[seg_type])
-        processor = DCMSerieProcessor(folder)
+        processor = DCMSeriesProcessor(folder)
         processor.read()
         return processor
 

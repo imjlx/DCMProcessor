@@ -14,7 +14,7 @@ import numpy as np
 import os
 
 
-class DCMSerieProcessor(object):
+class DCMSeriesProcessor(object):
     """
     作用： 读取文件夹中的DCM文件序列，然后进行分析
     目标情况：一个文件夹中只有一个有价值的目标序列，但是可能掺杂着若干定位像
@@ -27,8 +27,8 @@ class DCMSerieProcessor(object):
         # 文件夹地址
         self.folder = folder
         # 每个序列的ID, 以及对应的所有文件名
-        self.series_ID = []
-        self.series_fnames = []
+        self.series_ID = []     # 一维list
+        self.series_fnames = []     # 二维list
         self.load_series_fnames()
         # 序列数量
         self.N = len(self.series_fnames)
@@ -48,9 +48,10 @@ class DCMSerieProcessor(object):
 
     def load_series_fnames(self):
         """
-        加载所有序列, 以及对应的所有文件名
+        加载文件夹中的所有序列, 以及对应的所有文件名
         :return: 无
         """
+        # 获取文件夹中所有序列的ID：https://simpleitk.org/doxygen/v2_1/html/classitk_1_1simple_1_1ImageSeriesReader.html#a7243e837620b6e125c86fb92ca9bdeb8
         self.series_ID = sitk.ImageSeriesReader.GetGDCMSeriesIDs(self.folder)
         for serie_ID in self.series_ID:
             serie_fnames = sitk.ImageSeriesReader.GetGDCMSeriesFileNames(self.folder, serie_ID)
@@ -122,25 +123,10 @@ class DCMSerieProcessor(object):
         sitk.WriteImage(self.img, fpath)
 
 
-class DCMSeriesProcessor(DCMSerieProcessor):
-    def __init__(self, folder):
-        super().__init__(folder)
-        self.readers = []
-        self.imgs = []
-        self.infos = []
 
-    def Distinguish(self):
-        """
-        分辨不同序列, 生成info
-        :return:
-        """
-        for i in range(self.N):
-            series_description = self.readers[i].GetMetaData(slice=0, key="0008|103e")
-            slice_distance = self.imgs[i].GetSpacing()[2]
-            convolutional_kernel = self.readers[i].GetMetaData(slice=0, key="0018|1210")
-            content_time = self.readers[i].GetMetaData(slice=0, key="0008|0033")
-            self.infos.append([series_description, slice_distance, convolutional_kernel, content_time])
-
-
-
-
+if __name__ == "__main__":
+    # root = os.path.dirname(os.path.dirname(__file__))
+    # p = DCMSeriesProcessor(folder=os.path.join(root, "dataset\\DCMExample"))
+    # series_ID = sitk.ImageSeriesReader.GetGDCMSeriesIDs("E:\其他项目\DCMProcessor\dataset\DCMExample")
+    img = sitk.ReadImage("E:\其他项目\DCMProcessor\dataset\ct.nii")
+    pass

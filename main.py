@@ -9,12 +9,7 @@
     @Description：
 """
 
-import SimpleITK as sitk
-
-import utlis.folderControl
-from utlis import folderControl
-from utlis import DCMProcess
-import ZS_Aorta
+from application import ZS_Aorta
 
 # utlis.folderControl.patient_folder("F:\\ZS_Aorta")
 
