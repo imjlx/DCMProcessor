@@ -123,10 +123,8 @@ class DCMSeriesProcessor(object):
         sitk.WriteImage(self.img, fpath)
 
 
-
 if __name__ == "__main__":
-    # root = os.path.dirname(os.path.dirname(__file__))
-    # p = DCMSeriesProcessor(folder=os.path.join(root, "dataset\\DCMExample"))
-    # series_ID = sitk.ImageSeriesReader.GetGDCMSeriesIDs("E:\其他项目\DCMProcessor\dataset\DCMExample")
-    img = sitk.ReadImage("E:\其他项目\DCMProcessor\dataset\ct.nii")
+    root = os.path.dirname(os.path.dirname(__file__))
+
+    p = DCMSeriesProcessor(folder=os.path.join(root, "dataset\\DCMExample"))
     pass
