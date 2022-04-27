@@ -53,9 +53,10 @@ class DCMGenerator(object):
             "0008|0060": "CT",  # "Modality",
             # "0008|1030": "StudyDescription",  # DeepViewer中显示
             # "0008|103e": "SeriesDescription",  # DeepViewer中显示
-            "0020|000d": "1." + time.strftime("%Y%m%d") + ".1" + time.strftime("%H%M%S"),  # StudyInstanceUID
-            "0020|000e": "1.2.826.0.1.3680043.2.1125." + time.strftime("%Y%m%d")
-                         + ".1" + time.strftime("%H%M%S"),  # "SeriesInstanceUID",
+            "0018|5100": "FFS", # PatientPosition
+            "0020|000d": "1.2.826.0.1.3680043.2.1125." + str(time.time()) + ".1",  # "StudyInstanceUID"
+            "0020|000e": "1.2.826.0.1.3680043.2.1125." + str(time.time()) + ".2",  # "SeriesInstanceUID",
+            "0020|0052": "1.2.826.0.1.3680043.2.1125." + str(time.time()) + ".3",  # "FrameOfReferenceUID"
             "0020|0037": '\\'.join(map(str, (self.direction[0], self.direction[3],
                                              self.direction[6], self.direction[1],
                                              self.direction[4], self.direction[7]))),  # "ImageOrientationPatient",
@@ -69,8 +70,8 @@ class DCMGenerator(object):
         }
 
         # 转换含义输入和ID输入
-        for name, ID in zip(('PatientName', 'SeriesInstanceUID',),
-                            ('0010|0010', '0020|000e',)):
+        for name, ID in zip(('PatientName', 'SeriesInstanceUID', 'PatientPosition'),
+                            ('0010|0010', '0020|000e', '0018|5100')):
             if name in kwargs:
                 kwargs[ID] = kwargs[name]
                 kwargs.pop(name)
@@ -98,7 +99,7 @@ class DCMGenerator(object):
                               '\\'.join(map(str, self.img.TransformIndexToPhysicalPoint((0, 0, i)))))
         img_slice.SetMetaData("0020|0013", str(i))  # InstanceNumber
         # 保存单层文件
-        self.writer.SetFileName(os.path.join(out_dir, str(i) + '.dcm'))
+        self.writer.SetFileName(os.path.join(out_dir, self.common_tags['0010|0010'] + "_" + str(i) + '.dcm'))
         self.writer.Execute(img_slice)
 
     def Execute(self, out_dir: str, **kwargs) -> None:
