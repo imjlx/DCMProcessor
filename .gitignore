@@ -139,7 +139,7 @@ cython_debug/
 
 # Mine
 /.idea/
-__pycache__/
+test.ipynb
 /checkpoints/
 /logs/
 /dataset/
