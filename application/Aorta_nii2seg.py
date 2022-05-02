@@ -1,5 +1,5 @@
 """
-@file    :  Aorta_nii2dcm.py
+@file    :  Aorta_nii2seg.py
 @License :  (C)Copyright 2021 Haoran Jia, Fudan University. All Rights Reserved
 @Contact :  21211140001@m.fudan.edu.cn
 @Desc    :  
@@ -71,6 +71,6 @@ def copy_dcm_to_auto(base_folder=r"D:\Aorta", target_path=r"D:\DeepViewer\data\p
 
 if __name__ == "__main__":
     # copy_ct(r=(0, 5))
-    # generate_all_series()
-    copy_dcm_to_auto()
+    generate_all_series()
+    # copy_dcm_to_auto()
 

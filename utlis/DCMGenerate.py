@@ -53,6 +53,7 @@ class DCMGenerator(object):
             "0008|0060": "CT",  # "Modality",
             # "0008|1030": "StudyDescription",  # DeepViewer中显示
             # "0008|103e": "SeriesDescription",  # DeepViewer中显示
+            "0018|0050": str(self.img.GetSpacing()[2]),    # SliceThickness
             "0018|5100": "FFS", # PatientPosition
             "0020|000d": "1.2.826.0.1.3680043.2.1125." + str(time.time()) + ".1",  # "StudyInstanceUID"
             "0020|000e": "1.2.826.0.1.3680043.2.1125." + str(time.time()) + ".2",  # "SeriesInstanceUID",
@@ -62,6 +63,7 @@ class DCMGenerator(object):
                                              self.direction[4], self.direction[7]))),  # "ImageOrientationPatient",
 
             "0010|0010": "AnonyPatient",  # "PatientName",
+            "0010|0020": "AnonyID",  # "PatientID",
 
             # "0028|0100": "BitsAllocated",
             # "0028|0101": "BitsStored\t",
@@ -70,8 +72,8 @@ class DCMGenerator(object):
         }
 
         # 转换含义输入和ID输入
-        for name, ID in zip(('PatientName', 'SeriesInstanceUID', 'PatientPosition'),
-                            ('0010|0010', '0020|000e', '0018|5100')):
+        for name, ID in zip(('PatientName', 'PatientID', 'SeriesInstanceUID', 'PatientPosition'),
+                            ('0010|0010', '0010|0020', '0020|000e', '0018|5100')):
             if name in kwargs:
                 kwargs[ID] = kwargs[name]
                 kwargs.pop(name)
@@ -82,15 +84,29 @@ class DCMGenerator(object):
         self.common_tags = tags
         return tags
 
-    def WriteSlice(self, out_dir: str, i: int) -> None:
+    def WriteSlice(self, out_dir: str, i: int, inv_x: bool = False, inv_y: bool = False, inv_z: bool = False) -> None:
         """
         根据读取的原始图像、MetaData标签和层序号i，生成一层的DCM序列
         :param out_dir: 保存序列文件的文件夹路径，文件名自动保存为 ”i.dcm“
         :param i: 层数，可以从0开始，到n-1
+        :param inv_x: x方向是否翻转
+        :param inv_y: y方向是否翻转
+        :param inv_z: z方向是否翻转
         :return: None
         """
-        # 从nii文件读取的整个图像中，切片出一层DCM的数据
-        img_slice: sitk.Image = self.img[::-1, ::-1, i]
+        # 设置x, y方向是否翻转
+        gap_x = 1
+        gap_y = 1
+        if inv_x:
+            gap_x = -1
+        if inv_y:
+            gap_y = -1
+        # 从nii文件读取的整个图像中，切片出一层DCM的数据；要考虑z方向是否翻转
+        if inv_z:   # z方向翻转
+            img_slice: sitk.Image = sitk.Cast(self.img[::gap_x, ::gap_y, -i-1], sitk.sitkInt16)
+        else:   # z方向不翻转
+            img_slice: sitk.Image = sitk.Cast(self.img[::gap_x, ::gap_y, i], sitk.sitkInt16)
+
         # 设置层间相同的MetaData
         for tag in self.common_tags:
             img_slice.SetMetaData(tag, self.common_tags[tag])
@@ -102,10 +118,13 @@ class DCMGenerator(object):
         self.writer.SetFileName(os.path.join(out_dir, self.common_tags['0010|0010'] + "_" + str(i) + '.dcm'))
         self.writer.Execute(img_slice)
 
-    def Execute(self, out_dir: str, **kwargs) -> None:
+    def Execute(self, out_dir: str, inv_x: bool = False, inv_y: bool = False, inv_z: bool = False, **kwargs) -> None:
         """
         生成完整序列
         :param out_dir: 保存序列文件的文件夹路径，传给WriteSlice()
+        :param inv_x: x方向是否翻转
+        :param inv_y: y方向是否翻转
+        :param inv_z: z方向是否翻转
         :param kwargs: 输入的MetaData，传给SetCommonTags()
         :return:
         """
@@ -115,7 +134,7 @@ class DCMGenerator(object):
             os.makedirs(out_dir)
 
         for i in range(self.img.GetSize()[2]):
-            self.WriteSlice(out_dir=out_dir, i=i)
+            self.WriteSlice(out_dir=out_dir, i=i, inv_x=inv_x, inv_y=inv_y, inv_z=inv_z)
 
 
 if __name__ == "__main__":
