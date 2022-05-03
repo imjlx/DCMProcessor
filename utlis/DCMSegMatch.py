@@ -68,7 +68,7 @@ def match(info_origin_path, info_seg_path):
 def move_rtstruct(info_path):
     info = pd.read_excel(io=info_path, sheet_name=0, index_col='index')
     for i in range(1, len(info) + 1):   # 对每一行数据进行循环
-
+        print(i)
         source_folder = info.loc[i, 'matched_seg']  # 分割数据文件夹
         target_folder = info.loc[i, 'folder']   # 原始数据文件夹
         source_fpath = None     # RTSTRUCT***.dcm文件地址
@@ -79,7 +79,7 @@ def move_rtstruct(info_path):
 
         for fname in os.listdir(source_folder):     # 寻找匹配的文件
             if re.match(pattern="RTSTRUCT[0-9]+.dcm", string=fname):
-                source_fpath = os.path.join(source_folder, source_fpath)
+                source_fpath = os.path.join(source_folder, fname)
 
         if source_fpath is not None:    # 复制文件
             shutil.copyfile(src=source_fpath, dst=os.path.join(target_folder, "RTSTRUCT.dcm"))
@@ -95,4 +95,5 @@ if __name__ == "__main__":
     # find_folders(folder_path=r'F:\WB_seg', info_path=r'D:\脚本\生成DCM序列\dataset\info_seg.xlsx')
     # extract_info(r'D:\脚本\生成DCM序列\dataset\info_origin.xlsx')
     # extract_info(r'D:\脚本\生成DCM序列\dataset\info_seg.xlsx')
-    match(r"E:\other program\DCMProcessor\dataset\info_origin.xlsx", r"E:\other program\DCMProcessor\dataset\info_seg.xlsx")
+    # match(r"E:\other program\DCMProcessor\dataset\info_origin.xlsx", r"E:\other program\DCMProcessor\dataset\info_seg.xlsx")
+    move_rtstruct(r'D:\脚本\生成DCM序列\dataset\info_origin_1.xlsx')
