@@ -44,9 +44,12 @@ class DCMSegMatcher(object):
         for i, folder in enumerate(info.loc[:, 'folder']):
             series_id = sitk.ImageSeriesReader.GetGDCMSeriesIDs(folder)
             info.loc[i+1, 'Series_ID'] = series_id[0]
+            print(i)
         info.to_excel(info_path)
 
 if __name__ == "__main__":
     m = DCMSegMatcher()
-    # m.find_folders(folder_path=r'E:\other program\DCMProcessor\dataset\1', info_path=r'E:\other program\DCMProcessor\dataset\info.xlsx')
-    m.extract_info(r'E:\other program\DCMProcessor\dataset\info.xlsx')
+    # m.find_folders(folder_path=r'F:\WB', info_path=r'D:\脚本\生成DCM序列\dataset\info_origin.xlsx')
+    m.find_folders(folder_path=r'F:\WB_seg', info_path=r'D:\脚本\生成DCM序列\dataset\info_seg.xlsx')
+    # m.extract_info(r'D:\脚本\生成DCM序列\dataset\info_origin.xlsx')
+    m.extract_info(r'D:\脚本\生成DCM序列\dataset\info_seg.xlsx')
