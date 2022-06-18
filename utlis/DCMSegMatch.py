@@ -96,4 +96,13 @@ if __name__ == "__main__":
     # extract_info(r'D:\脚本\生成DCM序列\dataset\info_origin.xlsx')
     # extract_info(r'D:\脚本\生成DCM序列\dataset\info_seg.xlsx')
     # match(r"E:\other program\DCMProcessor\dataset\info_origin.xlsx", r"E:\other program\DCMProcessor\dataset\info_seg.xlsx")
-    move_rtstruct(r'D:\脚本\生成DCM序列\dataset\info_origin_1.xlsx')
+    # move_rtstruct(r'D:\脚本\生成DCM序列\dataset\info_origin_1.xlsx')
+
+
+    # find_folders(folder_path=r'F:\Patients-CT_PET_seg', info_path=r'D:\脚本\生成DCM序列\dataset\info_seg.xlsx')
+    # find_folders(folder_path=r'F:\Patients-CT_PET', info_path=r'D:\脚本\生成DCM序列\dataset\info_origin.xlsx')
+    # extract_info(r'D:\脚本\生成DCM序列\dataset\info_origin.xlsx')
+    # extract_info(r'D:\脚本\生成DCM序列\dataset\info_seg.xlsx')
+    # match(r"D:\脚本\生成DCM序列\dataset\info_origin.xlsx", r"D:\脚本\生成DCM序列\dataset\info_seg.xlsx")
+    move_rtstruct(r'D:\脚本\生成DCM序列\dataset\info_origin.xlsx')
+

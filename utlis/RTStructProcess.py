@@ -45,6 +45,12 @@ class RTStructExtractor(object):
         self.img: sitk.Image = sitk.Image()
         self.organ_ID: dict = OrganID
 
+    def Execute(self, fpath):
+        self.load_rtstruct()
+        self.load_image()
+        self.contours2mesh()
+        self.generate_seg(fpath=fpath)
+
     def load_rtstruct(self):
 
         # 在总文件夹中寻找 RTSTRUCTxxx.dcm 文件
@@ -158,11 +164,12 @@ class RTStructExtractor(object):
 
 
 if __name__ == "__main__":
-    e = RTStructExtractor(r"E:\SS-DCMProcessor\dataset\CT1")
-    # e.load_rtstruct()
-    # e.load_image()
-    # e.contours2mesh()
+    e = RTStructExtractor(r"F:\WB\AnonyP4S2_PETCT16254\PET_01_PETCT_WHOLEBODY_(ADULT)_20201109_155321_501000\CT_WB_3_0_B30F_0004")
+    e.load_rtstruct()
+    e.load_image()
+    e.contours2mesh()
     # e.load_organ_ID(r'E:\SS-DCMProcessor\dataset\OrganID.xlsx')
-    # e.generate_seg(r"E:\SS-DCMProcessor\dataset\seg.nii")
+    e.generate_seg(r"D:\seg.nii")
     lap = e.analyse_overlap()
+    print(lap)
     pass
