@@ -5,7 +5,7 @@ from utlis.RTStructProcess import RTStructExtractor
 import os
 
 
-def func(base_folder):
+def walk_all_folder(base_folder):
     wrong_folders: list = list()
     for f1 in os.listdir(base_folder):
         f1 = os.path.join(base_folder, f1)
@@ -21,11 +21,16 @@ def func(base_folder):
                 e = RTStructExtractor(f3)
                 isGenerated = e.Execute(os.path.join(f3, "seg.nii"))
                 if isGenerated:
+                    print("Missing file.")
                     wrong_folders.append(isGenerated)
 
     for folder in wrong_folders:
         print(folder)
 
 
+def seg_check(base_folder, fpath):
+    pass
+
+
 if __name__ == "__main__":
-    func(r"F:\Patients-CT_PET")
+    walk_all_folder(r"F:\Patients-CT_PET")

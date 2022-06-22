@@ -45,14 +45,28 @@ class RTStructExtractor(object):
         self.img: sitk.Image = sitk.Image()
         self.organ_ID: dict = OrganID
 
-    def Execute(self, fpath):
-        isRTSTRUCT = self.load_rtstruct()
-        isImage = self.load_image()
-        if isRTSTRUCT == 1 or isImage == 1:
-            return self.base_folder
-        else:
-            self.contours2mesh()
-            self.generate_seg(fpath=fpath)
+    def Execute(self, fpath, jump_mode=True):
+
+        if jump_mode:   # 如果检测到seg.nii文件，则跳过
+            for fname in os.listdir(self.base_folder):
+                if re.match(pattern="seg.nii", string=fname):
+                    # print("seg.nii exists, jumping this folder.")
+                    return 0
+
+        isRTSTRUCT = self.load_rtstruct()   # 读取RTSTRUCT分割文件
+        if isinstance(isRTSTRUCT, int):     # 根据读取情况返回错误值
+            return self.base_folder, 1
+
+        isImage = self.load_image()     # 读取原始图像
+        if isinstance(isImage, int):
+            return self.base_folder, 2
+
+        else:   # 成功读取，生产seg.nii文件
+            try:
+                self.contours2mesh()
+                self.generate_seg(fpath=fpath)
+            except:
+                print("Error occurred in contours2mesh() or generate_seg()")
             return 0
 
     def load_rtstruct(self):
@@ -93,10 +107,15 @@ class RTStructExtractor(object):
         if len(fnames) == 0:    # 如果读取不到原始文件，返回1
             print("No origin image file in ", self.base_folder)
             return 1
-        else:   # 有原始文件，正常读取
-            reader = sitk.ImageSeriesReader()
-            reader.SetFileNames(fnames)
-            self.img = reader.Execute()
+        else:   # 有原始文件，但可能会读取失败
+            try:
+                reader = sitk.ImageSeriesReader()
+                reader.SetFileNames(fnames)
+                self.img = reader.Execute()
+            except RuntimeError:
+                print("Run time Error, possibly name is too long.")
+                return 1
+
             return self.img
 
     def contours2mesh(self):
