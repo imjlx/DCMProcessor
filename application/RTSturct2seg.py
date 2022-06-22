@@ -6,6 +6,7 @@ import os
 
 
 def func(base_folder):
+    wrong_folders: list = list()
     for f1 in os.listdir(base_folder):
         f1 = os.path.join(base_folder, f1)
 
@@ -18,7 +19,12 @@ def func(base_folder):
                 print("Current Folder: ", f3)
 
                 e = RTStructExtractor(f3)
-                e.Execute(os.path.join(f3, "seg.nii"))
+                isGenerated = e.Execute(os.path.join(f3, "seg.nii"))
+                if isGenerated:
+                    wrong_folders.append(isGenerated)
+
+    for folder in wrong_folders:
+        print(folder)
 
 
 if __name__ == "__main__":

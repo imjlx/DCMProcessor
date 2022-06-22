@@ -46,13 +46,20 @@ class RTStructExtractor(object):
         self.organ_ID: dict = OrganID
 
     def Execute(self, fpath):
-        self.load_rtstruct()
-        self.load_image()
-        self.contours2mesh()
-        self.generate_seg(fpath=fpath)
+        isRTSTRUCT = self.load_rtstruct()
+        isImage = self.load_image()
+        if isRTSTRUCT == 1 or isImage == 1:
+            return self.base_folder
+        else:
+            self.contours2mesh()
+            self.generate_seg(fpath=fpath)
+            return 0
 
     def load_rtstruct(self):
-
+        """
+        读取患者的RTSTRUCT文件，提取其中的原始数据到list中
+        :return: ROIs
+        """
         # 在总文件夹中寻找 RTSTRUCTxxx.dcm 文件
         structure = None
         for fname in os.listdir(self.base_folder):
@@ -65,7 +72,7 @@ class RTStructExtractor(object):
 
         structure = pydicom.dcmread(structure)  # 读取文件
         ROIs = list()  # 用ROIs保存所有ROI的信息
-        # 对每个ROI进行遍历：
+        # 对每个ROI进行遍历, 保存其编号、名称和数据：
         for i in range(len(structure.ROIContourSequence)):
             ROI = dict()
             ROI['number'] = structure.ROIContourSequence[i].ReferencedROINumber
@@ -78,17 +85,27 @@ class RTStructExtractor(object):
         return self.ROIs
 
     def load_image(self):
+        """
+        加载原始图像，其信息用于参考
+        :return: 原始图像
+        """
         fnames = sitk.ImageSeriesReader.GetGDCMSeriesFileNames(self.base_folder)
-        assert len(fnames) > 0, "No DCM Series loaded"
-        reader = sitk.ImageSeriesReader()
-        reader.SetFileNames(fnames)
-        self.img = reader.Execute()
-        return self.img
+        if len(fnames) == 0:    # 如果读取不到原始文件，返回1
+            print("No origin image file in ", self.base_folder)
+            return 1
+        else:   # 有原始文件，正常读取
+            reader = sitk.ImageSeriesReader()
+            reader.SetFileNames(fnames)
+            self.img = reader.Execute()
+            return self.img
 
     def contours2mesh(self):
-        bar = tqdm(self.ROIs)
+        """
+        将边界点转换为格点，在self.ROIs的ROI中新建一个key来保存
+        :return:无
+        """
+        bar = tqdm(self.ROIs)   # 用tqdm显示进度
         for ROI in bar:
-            # print(f"{i+1}/{len(self.ROIs)}\tprocessing {ROI['name']}")
             bar.set_description(desc="contours2mesh")
             bar.set_postfix(organ=ROI['name'])
             meshes: list = list()
@@ -107,12 +124,12 @@ class RTStructExtractor(object):
             ROI['meshes'] = meshes
         bar.close()
 
-    def load_organ_ID(self, fpath):
-        f = pd.read_excel(fpath, sheet_name=0)
-        for i in range(len(f)):
-            self.organ_ID[f.loc[i, 'organ']] = f.loc[i, 'ID']
-
     def generate_seg(self, fpath):
+        """
+        生成分割的seg.nii图像
+        :param fpath: 保存路径
+        :return:
+        """
         # 创建一个原始图像大小的全零Image，作为保存分割数据的背景板
         seg = np.zeros_like(sitk.GetArrayViewFromImage(self.img))
         # 在info中保存RTStruct的信息
@@ -144,6 +161,10 @@ class RTStructExtractor(object):
         return info
 
     def analyse_overlap(self):
+        """
+        功能函数，分析器官之间有没有重合的点
+        :return: 重合的情况
+        """
         n_ROI = len(self.ROIs)
         overlap = list()
         for i in tqdm(range(n_ROI)):
