@@ -3,6 +3,8 @@
 from utlis.RTStructProcess import RTStructExtractor
 
 import os
+import re
+import pandas as pd
 
 
 def walk_all_folder(base_folder):
@@ -28,9 +30,38 @@ def walk_all_folder(base_folder):
         print(folder)
 
 
-def seg_check(base_folder, fpath):
-    pass
+def seg_check(base_folder, info_fpath):
+
+    # 读取全部文件夹的信息
+    fpaths: list = list()
+    for f1 in os.listdir(base_folder):
+        for f2 in os.listdir(os.path.join(base_folder, f1)):
+            for f3 in os.listdir(os.path.join(f1, f2)):
+                fpaths.append(os.path.join(f2, f3))
+
+    # 将文件夹按照结构保存到excel
+    info = pd.DataFrame(data=None, columns=["index", "f1", "f2", "f3", "RTSTRUCT", "seg"])
+    for i, fpath in enumerate(fpaths):
+        # 填补文件夹路径
+        info.loc[i, "f1"] = fpath.split("\\")[-3]
+        info.loc[i, "f2"] = fpath.split("\\")[-2]
+        info.loc[i, "f3"] = fpath.split("\\")[-1]
+        # 对特殊文件是否存在进行分析
+        for fname in os.listdir(fpath):
+            if re.match(pattern="RTSTRUCT[0-9]*.dcm", string=fname):
+                info.loc[i, "RTSTRUCT"] = 1
+            elif re.match(pattern="seg.nii", string=fname):
+                info.loc[i, "seg"] = 1
+            else:
+                pass
+    info.to_excel(info_fpath, index=True, index_label="index")
+
+
 
 
 if __name__ == "__main__":
-    walk_all_folder(r"F:\Patients-CT_PET")
+    # walk_all_folder(r"F:\Patients-CT_PET")
+    t = "base_folder\\b\\bb\\f1\\f2\\f3".split("\\")
+    t1 = t[-1]
+    pass
+

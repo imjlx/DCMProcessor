@@ -39,8 +39,8 @@ OrganID = {
 
 
 class RTStructExtractor(object):
-    def __init__(self, base_folder):
-        self.base_folder = base_folder
+    def __init__(self, folder):
+        self.base_folder = folder
         self.ROIs: List[dict] = list()
         self.img: sitk.Image = sitk.Image()
         self.organ_ID: dict = OrganID
