@@ -151,8 +151,6 @@ class RTStructExtractor(object):
         """
         # 创建一个原始图像大小的全零Image，作为保存分割数据的背景板
         seg = np.zeros_like(sitk.GetArrayViewFromImage(self.img))
-        # 在info中保存RTStruct的信息
-        info = list()
         # 根据完整器官列表进行循环
         bar = tqdm(self.organ_ID)
         for organ in bar:
@@ -164,20 +162,17 @@ class RTStructExtractor(object):
                 if ROI['name'] == organ:
                     ROIs_index = self.ROIs.index(ROI)
             # 根据有没有找到当前器官的分割结果：
-            if ROIs_index is None:
-                info.append(0)
-            else:
+            if ROIs_index is not None:
                 points = self.ROIs[ROIs_index]['meshes']
                 for point in points:
                     seg[point[2], point[1], point[0]] = self.organ_ID[organ]
-                info.append(1)
         bar.close()
 
         seg = sitk.GetImageFromArray(seg[:, ::-1, ::-1])
         seg.CopyInformation(self.img)
         seg = sitk.Cast(seg, sitk.sitkUInt8)
         sitk.WriteImage(image=seg, fileName=fpath)
-        return info
+        return 0
 
     def analyse_overlap(self):
         """
@@ -204,12 +199,10 @@ class RTStructExtractor(object):
 
 
 if __name__ == "__main__":
-    e = RTStructExtractor(r"F:\WB\AnonyP4S2_PETCT16254\PET_01_PETCT_WHOLEBODY_(ADULT)_20201109_155321_501000\CT_WB_3_0_B30F_0004")
+    folder_path = r"F:\Patients-CT_PET\OLIVEIRA_SILVA_MORAES_ANALIA_DACIA_97374207\PET_PETCT_13_WB_CBM_SPC_(ADULT)_20190527_091112_733000\AC_CT_WB_5_0_HD_FOV_0003"
+    e = RTStructExtractor(folder_path)
     e.load_rtstruct()
     e.load_image()
     e.contours2mesh()
-    # e.load_organ_ID(r'E:\SS-DCMProcessor\dataset\OrganID.xlsx')
-    e.generate_seg(r"D:\seg.nii")
-    lap = e.analyse_overlap()
-    print(lap)
+    e.generate_seg(os.path.join(folder_path, "seg.nii"))
     pass
