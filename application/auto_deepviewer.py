@@ -70,7 +70,18 @@ def copy1(base_folder=r"F:\需整理\自动分割\未分割", target_path=TARGET
                     else:
                         print("---------------", f3)
 
+def copy2(folder_base=r"F:\need to sort\seg_Manual", target_path=TARGET_PATH):
+    for folder_patient in os.listdir(folder_base):
+        if re.match(pattern="Anony", string=folder_patient):
+            pass
+        else:
+            folder_files = os.path.join(folder_base, folder_patient, "DICOM", "CT")
+            print(folder_files)
+            for fname in os.listdir(folder_files):
+                fpath = os.path.join(folder_files, fname)
+                shutil.copyfile(fpath, os.path.join(target_path, fname))
+
 
 if __name__ == "__main__":
-    copy1()
+    copy2()
 
