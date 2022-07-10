@@ -20,9 +20,12 @@ import SimpleITK as sitk
 import matplotlib.pyplot as plt
 import numpy as np
 
+from utlis import DCMBase
 
-class SegmentBase(object):
+
+class SegmentBase(DCMBase.DCMBase):
     def __init__(self):
+        super(SegmentBase, self).__init__()
         self.img = None  # 原始CT图像
         self.seg = None  # 完整分割结果
 
@@ -41,13 +44,23 @@ class SegmentBase(object):
         :param folder: CT文件夹路径
         :return: 读取的CT文件
         """
-        reader = sitk.ImageSeriesReader()
-        ID = reader.GetGDCMSeriesIDs(folder)
-        assert len(ID) == 1, "No Series or more than one series in specified folder."
-        fnames = reader.GetGDCMSeriesFileNames(directory=folder, seriesID=ID[0])
-        reader.SetFileNames(fnames)
-        self.img = reader.Execute()
+        self.img = self._ReadImageSeries(folder)
         return self.img
+
+    @staticmethod
+    def _ChangeImageRoiValue(seg: sitk.Image, value_old: int, value_new: int) -> sitk.Image:
+        """
+        改变分割图像的ROI取值
+        :param seg: 待改变的图片
+        :param value_old: 原值
+        :param value_new: 新值
+        :return: 改后的图片
+        """
+        arr = sitk.GetArrayFromImage(seg)
+        arr[arr == value_old] = value_new
+        arr = sitk.GetImageFromArray(arr)
+        arr.CopyInformation(seg)
+        return arr
 
 
 class SegmentFormatConverter(SegmentBase):
@@ -106,6 +119,26 @@ class Jpg2niiConverter(SegmentFormatConverter):
             os.mkdir(folder_save)
         # 保存文件
         sitk.WriteImage(image=seg, fileName=fpath_save)
+        return seg
+
+
+class Dcm2niiConverter(SegmentFormatConverter):
+    def __init__(self):
+        super().__init__()
+
+    def OrganConvert(self, folder_series, fpath_save, roi_value=255):
+        # 读取文件
+        seg = self._ReadImageSeries(folder_series)
+        # 修改最大值为255
+        value_old = sitk.GetArrayViewFromImage(seg).max()
+        if value_old != roi_value:
+            seg = self._ChangeImageRoiValue(seg, value_old=value_old, value_new=roi_value)
+        # 转换为nii方向
+        seg = self._ConvertImageDcm2nii(seg, pixelID=sitk.sitkUInt8)
+        # 保存文件
+        if not os.path.exists(os.path.dirname(fpath_save)):
+            os.makedirs(os.path.dirname(fpath_save))
+        sitk.WriteImage(seg, fpath_save)
         return seg
 
 
