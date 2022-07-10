@@ -78,12 +78,17 @@ class Jpg2niiConverter(SegmentFormatConverter):
             GetImageLayerMethod = self.GetImageLayerByName
         # 根据原始图像生成空白背景
         seg = np.zeros_like(sitk.GetArrayViewFromImage(self.img))
+        # 先检查文件夹中是否有图片，防止生产空文件
+        fnames = os.listdir(folder_jpg)
+        if len(fnames) == 0:
+            return 0
         # 对每一张jpg进行处理，得到完整的CT图
-        for fname in os.listdir(folder_jpg):
+        for fname in fnames:
             fpath = os.path.join(folder_jpg, fname)
             kind = filetype.guess(fpath)  # 检验是否全部为jpg文件
             assert kind.extension == 'jpg', "Wrong type in specified folder."
             seg_slice = cv2.imread(filename=fpath, flags=0)  # 读取文件为灰度图
+            assert np.shape(seg_slice) == (512, 512), f"{fpath} has different size from (512, 512)"
             z = GetImageLayerMethod(fname)  # 获取对应的层数
             seg[z] = seg_slice
 
@@ -178,7 +183,7 @@ class SegmentAssembleImageFilter(SegmentBase):
             fname = organ_name + ".nii"
             # 在文件夹中寻找器官
             if fname in os.listdir(self.folder_organs):
-                pbar.set_description(desc=organ_name)
+                pbar.set_description(desc="Assemble organs: %s" % organ_name)
                 # 读取器官为数组，转换bool值
                 organ = sitk.GetArrayFromImage(sitk.ReadImage(os.path.join(self.folder_organs, fname)))
                 organ_bool = organ.astype(bool)
@@ -207,7 +212,11 @@ class SegmentSplitImageFilter(SegmentBase):
         82: 'Duodenum', 86: 'Ovary'
     }
     MultipleOrgans = {
-        10: (10, 11), 22: (22, 23), 18: (18, 76, 77), 46: (46, 47),
+        10: (10, 11, 13, 15, 18, 19, 21, 22, 23, 24,
+             26, 28, 29, 32, 33, 37, 38, 42, 43, 44,
+             46, 47, 63, 65, 66, 67, 70, 73, 75, 76,
+             77, 78, 79, 80, 81, 82, 86),
+        22: (22, 23), 18: (18, 76, 77), 46: (46, 47),
     }
 
     def __init__(self, fpath_seg=None, folder_save=None):
@@ -238,13 +247,13 @@ class SegmentSplitImageFilter(SegmentBase):
             os.makedirs(folder_save)
 
         # 读取全器官文件
-        seg_img = sitk.ReadImage(self.fpath_seg)        # Image，用于拷贝信息
-        seg = sitk.GetArrayFromImage(seg_img)       # ndarray，用于运算
+        seg_img = sitk.ReadImage(self.fpath_seg)  # Image，用于拷贝信息
+        seg = sitk.GetArrayFromImage(seg_img)  # ndarray，用于运算
         # 对器官ID值进行循环，保存单独器官
         pbar = tqdm(SegmentSplitImageFilter.StandardName)
         for ID in pbar:
             if ID in seg:
-                pbar.set_description(str(SegmentSplitImageFilter.StandardName[ID]))
+                pbar.set_description("Splitting organs: %s" % str(SegmentSplitImageFilter.StandardName[ID]))
                 if ID in SegmentSplitImageFilter.MultipleOrgans:
                     seg_organ = self._AssembleMultipleOrgans(seg, ID)
                 else:
@@ -256,9 +265,6 @@ class SegmentSplitImageFilter(SegmentBase):
                 seg_organ.CopyInformation(seg_img)
                 seg_organ = sitk.Cast(seg_organ, sitk.sitkUInt8)
 
-                fpath = os.path.join(folder_save, str(ID)+'_'+SegmentSplitImageFilter.StandardName[ID]+".nii")
+                fpath = os.path.join(folder_save, str(ID) + '_' + SegmentSplitImageFilter.StandardName[ID] + ".nii")
                 sitk.WriteImage(seg_organ, fpath)
         pbar.close()
-
-
-
