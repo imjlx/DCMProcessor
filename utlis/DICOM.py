@@ -1,5 +1,5 @@
 """
-@file    :  DCMBase.py
+@file    :  DICOM.py
 @License :  (C)Copyright 2021 Haoran Jia, Fudan University. All Rights Reserved
 @Contact :  21211140001@m.fudan.edu.cn
 @Desc    :  
@@ -26,7 +26,7 @@ class DCMBase(object):
         pass
 
     @staticmethod
-    def _ReadImageSeries(folder: str) -> sitk.Image:
+    def _ReadDCMSeries(folder: str) -> sitk.Image:
         """
         利用sitk从文件夹中读取唯一序列的dcm文件
         :param folder: 读取文件夹
@@ -60,7 +60,19 @@ class DCMBase(object):
         return nii
 
 
+class DCMFormatConverter(DCMBase):
+    def __init__(self):
+        super().__init__()
+        self.img: sitk.Image = sitk.Image()
 
+    def ReadDCMSeries(self, folder):
+        self.img = self._ReadDCMSeries(folder)
+        return self.img
+
+    def DCM2nii(self, fpath):
+        img = self._ConvertImageDcm2nii(self.img)
+        sitk.WriteImage(img, fpath)
+        return img
 
 
 

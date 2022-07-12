@@ -20,10 +20,10 @@ import SimpleITK as sitk
 import matplotlib.pyplot as plt
 import numpy as np
 
-from utlis import DCMBase
+from utlis import DICOM
 
 
-class SegmentBase(DCMBase.DCMBase):
+class SegmentBase(DICOM.DCMBase):
     def __init__(self):
         super(SegmentBase, self).__init__()
         self.img = None  # 原始CT图像
@@ -44,7 +44,7 @@ class SegmentBase(DCMBase.DCMBase):
         :param folder: CT文件夹路径
         :return: 读取的CT文件
         """
-        self.img = self._ReadImageSeries(folder)
+        self.img = self._ReadDCMSeries(folder)
         return self.img
 
     @staticmethod
@@ -128,7 +128,7 @@ class Dcm2niiConverter(SegmentFormatConverter):
 
     def OrganConvert(self, folder_series, fpath_save, roi_value=255):
         # 读取文件
-        seg = self._ReadImageSeries(folder_series)
+        seg = self._ReadDCMSeries(folder_series)
         # 修改最大值为255
         value_old = sitk.GetArrayViewFromImage(seg).max()
         if value_old != roi_value:
