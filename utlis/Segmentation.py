@@ -155,7 +155,7 @@ class SegmentAssembleImageFilter(SegmentBase):
         "ParotidGland": 43,
 
         "Bladder": 15, "Ovary": 86, "Spleen": 66, "Thyroid": 70,
-        "Pancrease": 38, "GallBladder": 24,
+        "Pancrease": 38, "GallBladder": 24, "Penis": 39, "Testis": 85
     }
 
     def __init__(self, folder_organs=None, fpath_save=None):
@@ -238,17 +238,17 @@ class SegmentSplitImageFilter(SegmentBase):
         10: 'Body', 11: 'Skin', 13: 'Muscle', 15: 'Bladder', 18: 'Brain',
         19: 'Breast', 21: 'Esophagus', 22: 'Eye', 23: 'Len', 24: 'GallBladder',
         26: 'Heart', 28: 'Kidney', 29: 'Larynx', 32: 'Liver', 33: 'Lung',
-        37: 'OralCavity', 38: 'Pancreas', 42: 'Pituitary', 43: 'Parotid', 44: 'Intestine',
-        46: 'Bone', 47: 'Marrow', 63: 'TMJ', 65: 'SpinalCord', 66: 'Spleen',
-        67: 'Stomach', 70: 'Thyroid', 73: 'Trachea', 75: 'Cochlea', 76: 'BrainStem',
-        77: 'TemporalLobe', 78: 'OpticChiasm', 79: 'OpticalNerve', 80: 'Rectum', 81: 'Sigmoid',
-        82: 'Duodenum', 86: 'Ovary'
+        37: 'OralCavity', 38: 'Pancreas', 39: 'Penis', 42: 'Pituitary', 43: 'Parotid',
+        44: 'Intestine', 46: 'Bone', 47: 'Marrow', 63: 'TMJ', 65: 'SpinalCord',
+        66: 'Spleen', 67: 'Stomach', 70: 'Thyroid', 73: 'Trachea', 75: 'Cochlea',
+        76: 'BrainStem', 77: 'TemporalLobe', 78: 'OpticChiasm', 79: 'OpticalNerve', 80: 'Rectum',
+        81: 'Sigmoid', 82: 'Duodenum', 85: "Testis", 86: 'Ovary'
     }
     MultipleOrgans = {
         10: (10, 11, 13, 15, 18, 19, 21, 22, 23, 24,
-             26, 28, 29, 32, 33, 37, 38, 42, 43, 44,
-             46, 47, 63, 65, 66, 67, 70, 73, 75, 76,
-             77, 78, 79, 80, 81, 82, 86),
+             26, 28, 29, 32, 33, 37, 38, 39, 42, 43,
+             44,  46, 47, 63, 65, 66, 67, 70, 73, 75,
+             76, 77, 78, 79, 80, 81, 82, 85, 86),
         22: (22, 23), 18: (18, 76, 77), 46: (46, 47),
     }
 

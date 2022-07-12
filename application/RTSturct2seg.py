@@ -65,14 +65,16 @@ def seg_check(base_folder, info_fpath):
 
 
 def func():
-    for folder_base in os.listdir(r"F:\need to sort\seg_Manual"):
+    for folder_base in os.listdir(r"F:\need to sort\seg_Auto"):
         if re.match(pattern="Anony", string=folder_base):
-            pass
-        else:
-            folder = os.path.join(r"F:\need to sort\seg_Manual", folder_base, "DICOM\\CT")
-            print(folder)
-            e = RTStructExtractor(folder)
-            e.Execute(os.path.join(folder, "seg.nii"))
+            f0_path = os.path.join(r"F:\need to sort\seg_Auto", folder_base)
+            for f1 in os.listdir(f0_path):
+                f1_path = os.path.join(f0_path, f1)
+                for f2 in os.listdir(f1_path):
+                    if re.match("CT", f2):
+                        folder_path = os.path.join(f1_path, f2)
+                        e = RTStructExtractor(folder_path)
+                        e.Execute(os.path.join(folder_path, "seg.nii"))
 
 
 if __name__ == "__main__":

@@ -34,7 +34,7 @@ class DCMBase(object):
         """
         reader = sitk.ImageSeriesReader()
         ID = reader.GetGDCMSeriesIDs(folder)
-        assert len(ID) == 1, "No Series or more than one series in specified folder."
+        assert len(ID) == 1, "No Series or more than one series in %s."%folder
         fnames = reader.GetGDCMSeriesFileNames(directory=folder, seriesID=ID[0])
         reader.SetFileNames(fnames)
         img = reader.Execute()
