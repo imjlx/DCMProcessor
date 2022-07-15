@@ -87,9 +87,30 @@ def analyse_overlap(folder_patient):
         info.to_excel(os.path.join(folder_patient, "info.xlsx"))
 
 
+def auto_analyse_apply(fpath, threshold=0.3):
+    info = pd.read_excel(fpath, index_col="OrganID")
+    for ID in [row[0] for row in info.iterrows()]:
+        if (info.loc[ID, "Manual_Percent"] is None) and (info.loc[ID, "Auto_Percent"] is None):
+            info.loc[ID, "Apply"] = "None"
+        elif (info.loc[ID, "Manual_Percent"] is not None) and (info.loc[ID, "Auto_Percent"] is None):
+            info.loc[ID, "Apply"] = "manual"
+        elif (info.loc[ID, "Manual_Percent"] is None) and (info.loc[ID, "Auto_Percent"] is not None):
+            info.loc[ID, "Apply"] = "auto"
+        else:
+            if (info.loc[ID, "Manual_Percent"] > threshold) or (info.loc[ID, "Auto_Percent"] > threshold):
+                info.loc[ID, "Apply"] = "manual"
+
+    info.to_excel(os.path.join(os.path.dirname(fpath), "info_apply.xlsx"))
+
+
+def loop_apply(folder_base=r"F:\need to sort\processed"):
+    for folder_patient in os.listdir(folder_base):
+        folder_patient = os.path.join(folder_base, folder_patient)
+        fpath = os.path.join(folder_patient, "info.xlsx")
+
+        auto_analyse_apply(fpath)
+
 
 if __name__ == "__main__":
     #　organs_in_dataset()
-    for fname in os.listdir(r"F:\need to sort\seg_per_organ"):
-        fpath = os.path.join(r"F:\need to sort\seg_per_organ", fname)
-        analyse_overlap(fpath)
+    auto_analyse_apply(r"F:\need to sort\processed\AnonyP2S1_PETCT08695\info.xlsx")
