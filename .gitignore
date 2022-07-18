@@ -139,7 +139,6 @@ cython_debug/
 
 # Mine
 /.idea/
-test.ipynb
 /checkpoints/
 /logs/
 /dataset/

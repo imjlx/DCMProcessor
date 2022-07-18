@@ -48,9 +48,9 @@ class SegmentBase(DICOM.DCMBase):
         return self.img
 
     @staticmethod
-    def _ChangeImageRoiValue(seg: sitk.Image, value_old: int, value_new: int) -> sitk.Image:
+    def ChangeImageRoiValue(seg: sitk.Image, value_old: int, value_new: int) -> sitk.Image:
         """
-        改变分割图像的ROI取值
+        改变单器官分割图像的ROI取值
         :param seg: 待改变的图片
         :param value_old: 原值
         :param value_new: 新值
@@ -132,7 +132,7 @@ class Dcm2niiConverter(SegmentFormatConverter):
         # 修改最大值为255
         value_old = sitk.GetArrayViewFromImage(seg).max()
         if value_old != roi_value:
-            seg = self._ChangeImageRoiValue(seg, value_old=value_old, value_new=roi_value)
+            seg = self.ChangeImageRoiValue(seg, value_old=value_old, value_new=roi_value)
         # 转换为nii方向
         seg = self._ConvertImageDcm2nii(seg, pixelID=sitk.sitkUInt8)
         # 保存文件
@@ -143,7 +143,7 @@ class Dcm2niiConverter(SegmentFormatConverter):
 
 
 class SegmentAssembleImageFilter(SegmentBase):
-    OrganID = {
+    OrganID_manual = {
         # 有重叠部分, 先写大体积的，然后往上覆盖
         "Outline": 10, "Body": 10,
         "Skin": 11, "Muscle": 13,
@@ -157,14 +157,57 @@ class SegmentAssembleImageFilter(SegmentBase):
         "Bladder": 15, "Ovary": 86, "Spleen": 66, "Thyroid": 70,
         "Pancrease": 38, "GallBladder": 24, "Penis": 39, "Testis": 85
     }
+    OrganID_standard = {
+        "10_Body": 10, "11_Skin": 11, "13_Muscle": 13,
+        "46_Bone": 46, "47_Marrow": 47, "65_SpinalCord": 65,
+        "18_Brain": 18, "77_TemporalLobe": 77, "76_BrainStem": 76,
+        "22_Eye": 22, "23_Len": 23, "78_OpticChiasm": 78, "79_OpticalNerve": 79,
+        "33_Lung": 33, "26_Heart": 26, "19_Breast": 19,
+        "21_Esophagus": 21,  "29_Larynx": 29, "37_OralCavity": 37, "42_Pituitary": 42, "63_TMJ": 63,
+        "73_Trachea": 73, "75_Cochlea": 75,
+        "44_Intestine": 44, "32_Liver": 32, "28_Kidney": 28, "67_Stomach": 67, "43_Parotid": 43,
+        "15_Bladder": 15, "86_Ovary": 86, "66_Spleen": 66, "70_Thyroid": 70,
+        "38_Pancreas": 38, "24_GallBladder": 24, "39_Penis": 39, "85_Testis": 85,
+        "80_Rectum": 80, "81_Sigmoid": 81, "82_Duodenum": 82,
+    }
 
-    def __init__(self, folder_organs=None, fpath_save=None):
+    def __init__(self):
         super().__init__()
-        self.folder_organs = folder_organs
-        self.fpath_save = fpath_save
+        self.folder_organs = None
+        self.fpath_list = []
+        self.fname_list = []
+        self.fpath_save = None
+        self.OrganID = {}
 
-    def SetFolderOrgans(self, folder):
-        self.folder_organs = folder
+    def SetFpathList(self, folder_organs=None, fpath_list=None):
+        """
+        设置待组合的各器官分割文件（.nii格式）列表，两参数冲突，优先folder_organs
+        :param folder_organs: 文件夹下所有文件均为器官分割文件
+        :param fpath_list: 直接给定器官分割文件列表
+        :return: 器官分割文件列表
+        """
+        if folder_organs is not None:
+            self.fpath_list = os.listdir(folder_organs)
+            self.fpath_list = [os.path.join(folder_organs, fpath) for fpath in self.fpath_list]
+        elif fpath_list is not None:
+            self.fpath_list = fpath_list
+
+        self.fname_list = [fpath.split("\\")[-1] for fpath in self.fpath_list]
+
+        return self.fpath_list
+
+    def SetOrganIDDick(self, organ_id_dick):
+        """
+        设置各器官的ID值，ID与器官对应，通过文件名-ID字典确定（不含文件格式后缀）,
+        同时字典要确定器官覆写顺序，大器官、背景器官在前，小器官在后
+        :param organ_id_dick: 输入的字典，类中提供两种默认字典
+        :return: 文件名-ID字典
+        """
+        self.OrganID = organ_id_dick
+        # 判断列表中全部文件是否都在选定的ID_dick中
+        fnames_miss = [fname[0:-4] for fname in self.fname_list if fname[0:-4] not in self.OrganID]
+        assert len(fnames_miss) == 0, f"Organ ID dict and organs miss match.{fnames_miss}"
+        return self.OrganID
 
     def AnalyseOverlap(self, stop_organ_list=None):
         # 缺省值
@@ -195,39 +238,31 @@ class SegmentAssembleImageFilter(SegmentBase):
                     print(f"{organ_i}: {n_i};\t{organ_j}: {n_j};\t{ratio}")
         return 0
 
-    def Execute(self, fpath_save=None):
-        # 检查保存路径是否正确
-        if fpath_save is None:
-            fpath_save = self.fpath_save
-        assert fpath_save is not None, "Save path is not specified."
-
-        # 判断OrganID中是否有遗漏的器官
-        fnames_miss = [fname for fname in os.listdir(self.folder_organs)
-                       if fname[0:-4] not in SegmentAssembleImageFilter.OrganID]
-        assert len(fnames_miss) == 0, "Missed organ in OrganID."
-
-        # 根据原图像生成空白分割背景
-        seg = np.zeros_like(sitk.GetArrayViewFromImage(self.img)).astype(np.uint8)
+    def Execute(self, fpath_save):
+        # 根据其中任一分割图像生成空白分割背景
+        ref = sitk.ReadImage(self.fpath_list[0])
+        seg = np.zeros_like(sitk.GetArrayViewFromImage(ref)).astype(np.uint8)
         seg_bool = seg.astype(bool)
 
         # 按照顺序对OrganID中的器官进行覆写
-        pbar = tqdm(SegmentAssembleImageFilter.OrganID)
+        pbar = tqdm(self.OrganID)
         for organ_name in pbar:  # 对字典中的器官名进行循环
             fname = organ_name + ".nii"
             # 在文件夹中寻找器官
-            if fname in os.listdir(self.folder_organs):
+            if fname in self.fname_list:
+                fpath = self.fpath_list[self.fname_list.index(fname)]
                 pbar.set_description(desc="Assemble organs: %s" % organ_name)
                 # 读取器官为数组，转换bool值
-                organ = sitk.GetArrayFromImage(sitk.ReadImage(os.path.join(self.folder_organs, fname)))
+                organ = sitk.GetArrayFromImage(sitk.ReadImage(fpath))
                 organ_bool = organ.astype(bool)
                 # 算差集, 将新器官添加到seg中
                 seg_minus_organ = seg_bool ^ (seg_bool & organ_bool)
-                seg = seg * seg_minus_organ + organ_bool * SegmentAssembleImageFilter.OrganID[organ_name]
+                seg = seg * seg_minus_organ + organ_bool * self.OrganID[organ_name]
                 seg_bool = seg.astype(bool)
         pbar.close()
 
         seg = sitk.GetImageFromArray(seg)
-        seg.CopyInformation(self.img)
+        seg.CopyInformation(ref)
         seg = sitk.Cast(seg, sitk.sitkUInt8)
         sitk.WriteImage(seg, fpath_save)
         return seg
@@ -301,3 +336,8 @@ class SegmentSplitImageFilter(SegmentBase):
                 fpath = os.path.join(folder_save, str(ID) + '_' + SegmentSplitImageFilter.StandardName[ID] + ".nii")
                 sitk.WriteImage(seg_organ, fpath)
         pbar.close()
+
+
+if __name__ == "__main__":
+
+    pass

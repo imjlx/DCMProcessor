@@ -20,9 +20,12 @@ import SimpleITK as sitk
 import matplotlib.pyplot as plt
 import numpy as np
 
+from utlis.Image import Image
 
-class DCMBase(object):
+
+class DCMBase(Image):
     def __init__(self):
+        super(DCMBase, self).__init__()
         pass
 
     @staticmethod
