@@ -134,7 +134,7 @@ class Dcm2niiConverter(SegmentFormatConverter):
         if value_old != roi_value:
             seg = self.ChangeImageRoiValue(seg, value_old=value_old, value_new=roi_value)
         # 转换为nii方向
-        seg = self._ConvertImageDcm2nii(seg, pixelID=sitk.sitkUInt8)
+        seg = self._ConvertImageDcm2nii(seg, dtype=sitk.sitkUInt8)
         # 保存文件
         if not os.path.exists(os.path.dirname(fpath_save)):
             os.makedirs(os.path.dirname(fpath_save))

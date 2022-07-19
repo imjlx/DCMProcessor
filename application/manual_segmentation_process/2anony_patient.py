@@ -11,6 +11,7 @@
 import os
 import re
 import shutil
+import SimpleITK as sitk
 
 from tqdm import tqdm
 
@@ -168,8 +169,24 @@ def generate_img_nii(folder_base):
 
     a = DICOM.DCMFormatConverter()
     a.ReadDCMSeries(folder)
-    a.DCM2nii(os.path.join(folder_save, "img.nii"))
+    a.DCM2nii(os.path.join(folder_save, "img.nii"), dtype=sitk.sitkInt16)
 
+
+def generate_pet_nii(folder_base):
+    patient_name = folder_base.split("\\")[-1]
+    folder_save = os.path.join(r"F:\need to sort\processed", patient_name)
+    folder_base = os.path.join(r"F:\need to sort\seg_Auto", patient_name)
+    f0_path = folder_base
+    for f1 in os.listdir(f0_path):
+        f1_path = os.path.join(f0_path, f1)
+        if os.path.isdir(f1_path):
+            for f2 in os.listdir(f1_path):
+                if re.match("PET", f2):
+                    folder = os.path.join(f1_path, f2)
+
+    a = DICOM.DCMFormatConverter()
+    a.ReadDCMSeries(folder)
+    a.DCM2nii(os.path.join(folder_save, "PET.nii"))
 
 if __name__ == "__main__":
     folders_base = [
@@ -184,27 +201,27 @@ if __name__ == "__main__":
         r"F:\need to sort\seg_Manual\AnonyP11S1_PETCT07347",
         r"F:\need to sort\seg_Manual\AnonyP12S3_PETCT13166",
         r"F:\need to sort\seg_Manual\AnonyP15S2_PETCT16905",
-         r"F:\need to sort\seg_Manual\AnonyP17S1_PETCT19111",
-         r"F:\need to sort\seg_Manual\AnonyP18S1_PETCT19738",
-         r"F:\need to sort\seg_Manual\AnonyP18S2_PETCT18822",
-         r"F:\need to sort\seg_Manual\AnonyP18S3_PETCT20454",
-         r"F:\need to sort\seg_Manual\AnonyP21S1_PETCT02616",
-         r"F:\need to sort\seg_Manual\AnonyP21S3_PETCT11232",
-         r"F:\need to sort\seg_Manual\AnonyP46S1_PETCT03359",
-         r"F:\need to sort\seg_Manual\AnonyP24S1_PETCT17219",
-         r"F:\need to sort\seg_Manual\AnonyP25S1_PETCT02437",
-         r"F:\need to sort\seg_Manual\AnonyP25S2_PETCT13079",
-         r"F:\need to sort\seg_Manual\AnonyP28S1_PETCT03330",
-         r"F:\need to sort\seg_Manual\AnonyP29S1_PETCT01835",
-         r"F:\need to sort\seg_Manual\AnonyP30S1_PETCT03388",
-         r"F:\need to sort\seg_Manual\AnonyP30S1_PETCT08560",
-         r"F:\need to sort\seg_Manual\AnonyP32S1_PETCT04649",
-         r"F:\need to sort\seg_Manual\AnonyP33S1_PETCT09798",
-         r"F:\need to sort\seg_Manual\AnonyP36S1_PETCT00837",
-         r"F:\need to sort\seg_Manual\AnonyP36S1_PETCT05060",
-         r"F:\need to sort\seg_Manual\AnonyP37S1_PETCT09454",
-         r"F:\need to sort\seg_Manual\AnonyP38S1_PETCT00566",
-         r"F:\need to sort\seg_Manual\AnonyP42S1_PETCT06512",
+        r"F:\need to sort\seg_Manual\AnonyP17S1_PETCT19111",
+        r"F:\need to sort\seg_Manual\AnonyP18S1_PETCT19738",
+        r"F:\need to sort\seg_Manual\AnonyP18S2_PETCT18822",
+        r"F:\need to sort\seg_Manual\AnonyP18S3_PETCT20454",
+        r"F:\need to sort\seg_Manual\AnonyP21S1_PETCT02616",
+        r"F:\need to sort\seg_Manual\AnonyP21S3_PETCT11232",
+        r"F:\need to sort\seg_Manual\AnonyP46S1_PETCT03359",
+        r"F:\need to sort\seg_Manual\AnonyP24S1_PETCT17219",
+        r"F:\need to sort\seg_Manual\AnonyP25S1_PETCT02437",
+        r"F:\need to sort\seg_Manual\AnonyP25S2_PETCT13079",
+        r"F:\need to sort\seg_Manual\AnonyP28S1_PETCT03330",
+        r"F:\need to sort\seg_Manual\AnonyP29S1_PETCT01835",
+        r"F:\need to sort\seg_Manual\AnonyP30S1_PETCT03388",
+        r"F:\need to sort\seg_Manual\AnonyP30S1_PETCT08560",
+        r"F:\need to sort\seg_Manual\AnonyP32S1_PETCT04649",
+        r"F:\need to sort\seg_Manual\AnonyP33S1_PETCT09798",
+        r"F:\need to sort\seg_Manual\AnonyP36S1_PETCT00837",
+        r"F:\need to sort\seg_Manual\AnonyP36S1_PETCT05060",
+        r"F:\need to sort\seg_Manual\AnonyP37S1_PETCT09454",
+        r"F:\need to sort\seg_Manual\AnonyP38S1_PETCT00566",
+        r"F:\need to sort\seg_Manual\AnonyP42S1_PETCT06512",
         r"F:\need to sort\seg_Manual\AnonyP44S1_PETCT02304",
     ]
     for folder_base in folders_base:
@@ -217,5 +234,7 @@ if __name__ == "__main__":
         # move_organs_auto(folder_base)
         # move_seg(folder_base)
         generate_img_nii(folder_base)
+        # generate_pet_nii(folder_base)
+        pass
 
     # print_folder_as_list(folder_base=r"F:\need to sort\seg_Manual")

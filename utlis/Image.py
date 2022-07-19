@@ -34,6 +34,11 @@ class Image(object):
         print("PixelID: \t", img.GetPixelID())
         print("PixelType: \t", sitk.GetPixelIDValueAsString(img.GetPixelID()))
 
+
+class ImageResampler(Image):
+    def __init__(self):
+        super().__init__()
+
     @staticmethod
     def ResampleToNewSpacing(img: sitk.Image, new_spacing: tuple, is_label: bool = False, default_value=0):
         """
@@ -71,6 +76,35 @@ class Image(object):
         # 执行并返回
         return resampler.Execute(img)
 
+    @staticmethod
+    def ResampleToReferenceImage(img: sitk.Image, ref: sitk.Image, is_label: bool = False, default_value=0, dtype=None):
+        """
+        根据参考图像对目标图像进行重采样
+        :param img: 待采样的图片
+        :param ref: 参考图片
+        :param is_label: 是否是标签
+        :param default_value: 默认填补值
+        :param dtype: 数据类型
+        :return: 重采样后的图像
+        """
+        # 声明resampler
+        resampler = sitk.ResampleImageFilter()
+        # 基本信息
+        resampler.SetOutputSpacing(ref.GetSpacing())  # 间距
+        resampler.SetSize(ref.GetSize())  # 大小
+        resampler.SetOutputOrigin(ref.GetOrigin())  # 原点
+        resampler.SetOutputDirection(ref.GetDirection())  # 朝向
+
+        resampler.SetTransform(sitk.Transform())    # 变换
+        resampler.SetDefaultPixelValue(default_value)   # 默认值
+        if dtype is not None:   # 数据类型
+            resampler.SetOutputPixelType(dtype)
+        if is_label:    # 插值方式
+            resampler.SetInterpolator(sitk.sitkNearestNeighbor)
+        else:
+            resampler.SetInterpolator(sitk.sitkLinear)
+
+        return resampler.Execute(img)
 
 if __name__ == "__main__":
     img = sitk.ReadImage(r"E:\SS-DCMProcessor\dataset\processed\ARMIJOS_DE_DUQUE_ROSA_MARIA_97030634(chenxin)\seg_manual.nii")

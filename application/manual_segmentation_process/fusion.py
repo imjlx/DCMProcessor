@@ -12,7 +12,7 @@ import SimpleITK as sitk
 import pandas as pd
 import os
 from utlis.Segmentation import SegmentBase, SegmentAssembleImageFilter
-from utlis.Image import Image
+from utlis.Image import ImageResampler
 
 
 def create_add(folder_base):
@@ -57,9 +57,11 @@ def Resample(folder_base):
     pet = sitk.ReadImage(os.path.join(folder_base, "PET.nii"))
     atlas = sitk.ReadImage(os.path.join(folder_base, "seg_fusion.nii"))
 
-    ct = Image.ResampleToNewSpacing(ct, (1, 1, 1), is_label=False, default_value=-1024)
-    pet = Image.ResampleToNewSpacing(pet, (1, 1, 1), is_label=False, default_value=0)
-    atlas = Image.ResampleToNewSpacing(atlas, (1, 1, 1), is_label=True, default_value=0)
+    # ct = ImageResampler.ResampleToNewSpacing(ct, (1, 1, 1), is_label=False, default_value=-1024)
+    pet = ImageResampler.ResampleToNewSpacing(pet, (1, 1, 1), is_label=False, default_value=0)
+    ct = ImageResampler.ResampleToReferenceImage(ct, ref=pet, is_label=False, default_value=-1024)
+    # pet = ImageResampler.ResampleToReferenceImage(pet, ref=ct, is_label=False, default_value=0)
+    atlas = ImageResampler.ResampleToNewSpacing(atlas, (1, 1, 1), is_label=True, default_value=0)
 
     folder_save = os.path.join(folder_base, "resample_1_1_1")
     if not os.path.exists(folder_save):
@@ -70,9 +72,10 @@ def Resample(folder_base):
 
 
 if __name__ == "__main__":
-    folder = r"E:\SS-DCMProcessor\dataset\processed\ARMIJOS_DE_DUQUE_ROSA_MARIA_97030634(chenxin)"
+    folder = r"F:\need to sort\processed\AnonyP1S2_PETCT13098"
     # create_add(folder)
-    assemble(folder)
+    # assemble(folder)
+    Resample(folder)
 
 
 

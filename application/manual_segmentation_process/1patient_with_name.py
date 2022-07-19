@@ -9,7 +9,7 @@
 2022/7/8 22:24   JHR          1.0         
 """
 import shutil
-
+import SimpleITK as sitk
 from utlis import Segmentation, DICOM
 from tqdm import tqdm
 import os
@@ -142,7 +142,17 @@ def generate_img_nii(folder_base):
 
     a = DICOM.DCMFormatConverter()
     a.ReadDCMSeries(folder)
-    a.DCM2nii(os.path.join(folder_save, "img.nii"))
+    a.DCM2nii(os.path.join(folder_save, "img.nii"), dtype=sitk.sitkInt16)
+
+
+def generate_pet_nii(folder_base):
+    folder = os.path.join(folder_base, "DICOM", "PET")
+    patient_name = folder_base.split("\\")[-1]
+    folder_save = os.path.join(r"F:\need to sort\processed", patient_name)
+
+    a = DICOM.DCMFormatConverter()
+    a.ReadDCMSeries(folder)
+    a.DCM2nii(os.path.join(folder_save, "PET.nii"))
 
 
 if __name__ == "__main__":
@@ -175,6 +185,7 @@ if __name__ == "__main__":
         # move_splited_organs(folder_base)
         # move_seg(folder_base)
         generate_img_nii(folder_base)
+        # generate_pet_nii(folder_base)
 
 
     # print_folder_as_list(r"F:\need to sort\seg_Manual")
