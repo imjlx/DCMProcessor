@@ -168,7 +168,7 @@ def generate_img_nii(folder_base):
                     folder = os.path.join(f1_path, f2)
 
     a = DICOM.DCMFormatConverter()
-    a.ReadDCMSeries(folder)
+    a.ReadSeries(folder)
     a.DCM2nii(os.path.join(folder_save, "img.nii"), dtype=sitk.sitkInt16)
 
 
@@ -185,7 +185,7 @@ def generate_pet_nii(folder_base):
                     folder = os.path.join(f1_path, f2)
 
     a = DICOM.DCMFormatConverter()
-    a.ReadDCMSeries(folder)
+    a.ReadSeries(folder)
     a.DCM2nii(os.path.join(folder_save, "PET.nii"))
 
 if __name__ == "__main__":

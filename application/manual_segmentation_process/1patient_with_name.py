@@ -141,7 +141,7 @@ def generate_img_nii(folder_base):
     folder_save = os.path.join(r"F:\need to sort\processed", patient_name)
 
     a = DICOM.DCMFormatConverter()
-    a.ReadDCMSeries(folder)
+    a.ReadSeries(folder)
     a.DCM2nii(os.path.join(folder_save, "img.nii"), dtype=sitk.sitkInt16)
 
 
@@ -151,7 +151,7 @@ def generate_pet_nii(folder_base):
     folder_save = os.path.join(r"F:\need to sort\processed", patient_name)
 
     a = DICOM.DCMFormatConverter()
-    a.ReadDCMSeries(folder)
+    a.ReadSeries(folder)
     a.DCM2nii(os.path.join(folder_save, "PET.nii"))
 
 

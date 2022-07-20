@@ -26,13 +26,18 @@ class Image(object):
         self.img: sitk.Image = sitk.Image()
 
     @staticmethod
-    def PrintBasicInfo(img: sitk.Image):
+    def PrintBasicInfo(img: sitk.Image) -> None:
         print("Size: \t\t", img.GetSize())
         print("Spacing: \t", img.GetSpacing())
         print("Origin: \t", img.GetOrigin())
         print("Direction: \t", img.GetDirection())
         print("PixelID: \t", img.GetPixelID())
         print("PixelType: \t", sitk.GetPixelIDValueAsString(img.GetPixelID()))
+
+    @staticmethod
+    def PrintMetaData(reader) -> None:
+
+        pass
 
 
 class ImageResampler(Image):

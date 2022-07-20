@@ -44,7 +44,7 @@ class SegmentBase(DICOM.DCMBase):
         :param folder: CT文件夹路径
         :return: 读取的CT文件
         """
-        self.img = self._ReadDCMSeries(folder)
+        self.img = self.ReadDCMSeries(folder)
         return self.img
 
     @staticmethod
@@ -128,13 +128,13 @@ class Dcm2niiConverter(SegmentFormatConverter):
 
     def OrganConvert(self, folder_series, fpath_save, roi_value=255):
         # 读取文件
-        seg = self._ReadDCMSeries(folder_series)
+        seg = self.ReadDCMSeries(folder_series)
         # 修改最大值为255
         value_old = sitk.GetArrayViewFromImage(seg).max()
         if value_old != roi_value:
             seg = self.ChangeImageRoiValue(seg, value_old=value_old, value_new=roi_value)
         # 转换为nii方向
-        seg = self._ConvertImageDcm2nii(seg, dtype=sitk.sitkUInt8)
+        seg = self.ConvertImageDcm2nii(seg, dtype=sitk.sitkUInt8)
         # 保存文件
         if not os.path.exists(os.path.dirname(fpath_save)):
             os.makedirs(os.path.dirname(fpath_save))

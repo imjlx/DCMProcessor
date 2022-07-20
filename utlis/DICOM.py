@@ -29,22 +29,104 @@ class DCMBase(Image):
         pass
 
     @staticmethod
-    def _ReadDCMSeries(folder: str) -> sitk.Image:
+    def ReadDCMSeries(folder: str, load_metadata=False, load_private_tags=False):
         """
         利用sitk从文件夹中读取唯一序列的dcm文件
         :param folder: 读取文件夹
-        :return: 读取的图像
+        :param load_metadata: 是否读取Metadata
+        :param load_private_tags: 是否读取Private tags
+        :return: 若不读取Metadata， 返回读取的图像；若读取，返回(img, reader)
         """
         reader = sitk.ImageSeriesReader()
         ID = reader.GetGDCMSeriesIDs(folder)
         assert len(ID) == 1, "No Series or more than one series in %s."%folder
         fnames = reader.GetGDCMSeriesFileNames(directory=folder, seriesID=ID[0])
         reader.SetFileNames(fnames)
-        img = reader.Execute()
-        return img
+
+        if load_metadata:
+            reader.MetaDataDictionaryArrayUpdateOn()
+            if load_private_tags:
+                reader.LoadPrivateTagsOn()
+            img = reader.Execute()
+            return img, reader
+        else:
+            img = reader.Execute()
+            return img
 
     @staticmethod
-    def _ConvertImageDcm2nii(dcm: sitk.Image, dtype=None) -> sitk.Image:
+    def PrintMetaData(reader: sitk.ImageSeriesReader):
+        # 先读取图片
+        img = reader.Execute()
+        # 通过任一（第0）层获取键值
+        keys: tuple = reader.GetMetaDataKeys(slice=0)
+
+        print(f"Total: {len(keys)} Tags, \t {img.GetSize()[2]} slices.")
+
+        for key in reader.GetMetaDataKeys(slice=0):
+            values = []
+            for s in range(img.GetSize()[2]):
+                values.append(reader.GetMetaData(s, key))
+            values_set = set(values)
+            if len(values_set) == 1:
+                print(f"{key} equal:\t{reader.GetMetaData(0, key)}")
+            else:
+                print(f"{key} **{len(values_set)} values: eg. {reader.GetMetaData(0, key)}")
+
+    @staticmethod
+    def PrintImportantMetaData(reader: sitk.ImageSeriesReader):
+        # 获取层数
+        img = reader.Execute()
+        slice = img.GetSize()[2]
+        # 重建字典
+        keys_same = {
+            "0020|000e": "Series Instance UID",
+            "0010|0010": "Patient's name",
+            "0018|0008": "Image Type",
+            "0028|0101": "Bits Stored",
+
+            "0008|0050": "Slice Thickness",
+            "0028|0030": "Pixel Spacing",
+            "0028|0010": "Rows",
+            "0028|0011": "Columns",
+            "0020|0037": "Image Orientation (Patient)",
+        }
+
+        keys_diff = {
+            "0020|0013": "Instance Number",
+            "0020|1041": "Slice Location",
+        }
+
+        for key in keys_same:
+            print(f"{key}: {keys_same[key]:<30}", end="\t")
+            if reader.HasMetaDataKey(0, key):
+                print(reader.GetMetaData(0, key))
+            else:
+                print()
+
+        print()
+        for key in keys_diff:
+            print(f"{key}: {keys_diff[key]:<30}", end="\t")
+            if reader.HasMetaDataKey(0, key):
+                start = reader.GetMetaData(0, key)
+                end = reader.GetMetaData(slice-1, key)
+                print(f"{start} : {end} : {(float(start)-float(end))/(slice-1)}")
+            else:
+                print()
+
+        print()
+        print("0020|0032: {:<30}".format("Image Position (Patient)"), end="\t")
+        if reader.HasMetaDataKey(0, "0020|0032"):
+            start = reader.GetMetaData(0, "0020|0032")
+            end = reader.GetMetaData(slice - 1, "0020|0032")
+            print(start, end=" ,")
+            s = start.split("\\")[-1]
+            e = end.split("\\")[-1]
+            print(f"{s} : {e} : {(float(s) - float(e)) / (slice - 1)}")
+        else:
+            print()
+
+    @staticmethod
+    def ConvertImageDcm2nii(dcm: sitk.Image, dtype=None) -> sitk.Image:
         """
         直接将dcm读取后保存的nii在Amide中与原始图像朝向相反，需要进行翻转
         本函数实现对读取的dcm文件进行翻转操作，使可以直接保存为nii
@@ -64,18 +146,23 @@ class DCMBase(Image):
 
 
 class DCMFormatConverter(DCMBase):
-    def __init__(self):
+    def __init__(self, folder):
         super().__init__()
-        self.img: sitk.Image = sitk.Image()
-
-    def ReadDCMSeries(self, folder):
-        self.img = self._ReadDCMSeries(folder)
-        return self.img
+        self.img: sitk.Image = self.ReadDCMSeries(folder)
 
     def DCM2nii(self, fpath, dtype=None):
-        img = self._ConvertImageDcm2nii(self.img, dtype=dtype)
+        img = self.ConvertImageDcm2nii(self.img, dtype=dtype)
         sitk.WriteImage(img, fpath)
         return img
+
+if __name__ == "__main__":
+    folder_base = r"E:\SS-DCMProcessor\dataset\dcm2nii"
+    folder_ct = r"E:\SS-DCMProcessor\dataset\dcm2nii\CT"
+    folder_pet = r"E:\SS-DCMProcessor\dataset\dcm2nii\PET"
+
+    ct, reader_ct = DCMBase.ReadDCMSeries(folder_ct, load_metadata=True)
+    # pet, reader_pet = DCMBase.ReadDCMSeries(folder_pet, load_metadata=True)
+    DCMBase.PrintImportantMetaData(reader_ct)
 
 
 
