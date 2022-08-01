@@ -8,6 +8,7 @@
 ------------      -------      --------     
 2022/7/8 22:24   JHR          1.0         
 """
+import re
 import shutil
 import SimpleITK as sitk
 from utlis import Segmentation, DICOM
@@ -135,16 +136,6 @@ def print_folder_as_list(folder_base):
         print("r\"", os.path.join(folder_base, fname), "\",")
 
 
-def generate_img_nii(folder_base):
-    folder = os.path.join(folder_base, "DICOM", "CT")
-    patient_name = folder_base.split("\\")[-1]
-    folder_save = os.path.join(r"F:\need to sort\processed", patient_name)
-
-    a = DICOM.DCMFormatConverter()
-    a.ReadSeries(folder)
-    a.DCM2nii(os.path.join(folder_save, "img.nii"), dtype=sitk.sitkInt16)
-
-
 def generate_pet_nii(folder_base):
     folder = os.path.join(folder_base, "DICOM", "PET")
     patient_name = folder_base.split("\\")[-1]
@@ -155,37 +146,37 @@ def generate_pet_nii(folder_base):
     a.DCM2nii(os.path.join(folder_save, "PET.nii"))
 
 
+def move_origin(folder_base):
+    for name in os.listdir(folder_base):
+        if re.match("Anony", name):
+            pass
+        else:
+            print(name)
+            CT = os.path.join(folder_base, name, "DICOM", "CT")
+            PET = os.path.join(folder_base, name, "DICOM", "PET")
+
+            if not os.path.exists(os.path.join("F:\PETCT_sorted", name, "CT")):
+                os.makedirs(os.path.join("F:\PETCT_sorted", name, "CT"))
+
+            if not os.path.exists(os.path.join("F:\PETCT_sorted", name, "PET")):
+                os.makedirs(os.path.join("F:\PETCT_sorted", name, "PET"))
+
+            for fname in os.listdir(CT):
+                shutil.copyfile(src=os.path.join(CT, fname),
+                                dst=os.path.join("F:\PETCT_sorted", name, "CT", fname))
+
+            for fname in os.listdir(PET):
+                shutil.copyfile(src=os.path.join(PET, fname),
+                                dst=os.path.join("F:\PETCT_sorted", name, "PET", fname))
+
+
 if __name__ == "__main__":
-    patient_list = [
-        r"F:\need to sort\seg_Manual\ARMIJOS_DE_DUQUE_ROSA_MARIA_97030634(chenxin)",
-        r"F:\need to sort\seg_Manual\AXELRAD_MONICA_1129584",
-        r"F:\need to sort\seg_Manual\BAYS_CHRISTINNE_97262903",
-        r"F:\need to sort\seg_Manual\CHAN_KUOC_KEI_255852",
-        r"F:\need to sort\seg_Manual\Children_ETEMI_LEON_97559075",
-
-        r"F:\need to sort\seg_Manual\Children_LUZIA_DA_CRUZ_SARAH_97290738",
-
-        r"F:\need to sort\seg_Manual\Children_MAROUF_ABDESSAMAD_97122290",
-        r"F:\need to sort\seg_Manual\CRISP_DOMINIC_97755225(chenxin)",
-        r"F:\need to sort\seg_Manual\DE_DOMPIERRE_DANIEL_FRANCOIS_356081",
-        r"F:\need to sort\seg_Manual\DE_TOLEDO_LARA_541278(chenxin)",
-        r"F:\need to sort\seg_Manual\GHITIS_ALAN_ZACCARIA_EUGENIO_263107",
-        r"F:\need to sort\seg_Manual\KOLLY_MARLENE_151252(chenxin)",
-        r"F:\need to sort\seg_Manual\LOPES_PEREIRA_KEVIN_472886",
-        r"F:\need to sort\seg_Manual\MAYER-BESTING_ELENA_98326151",
-        r"F:\need to sort\seg_Manual\NUSSER_KARINE_97054107",
-        r"F:\need to sort\seg_Manual\VARELA_RUIZ_JUAN_MANUEL_872571",
-    ]
-    for folder_base in patient_list:
-        print(folder_base.split("\\")[-1])
-        # organs_convert(folder_base)
-        # assemble_organs(folder_base)
-        # split_organs_manual(folder_base)
-        # split_organs_auto(folder_base)
-        # move_splited_organs(folder_base)
-        # move_seg(folder_base)
-        generate_img_nii(folder_base)
-        # generate_pet_nii(folder_base)
+    folder_base = r"F:\need to sort\seg_Manual"
+    move_origin(folder_base)
 
 
-    # print_folder_as_list(r"F:\need to sort\seg_Manual")
+
+
+
+
+

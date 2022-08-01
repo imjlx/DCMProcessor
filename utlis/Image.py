@@ -45,13 +45,14 @@ class ImageResampler(Image):
         super().__init__()
 
     @staticmethod
-    def ResampleToNewSpacing(img: sitk.Image, new_spacing: tuple, is_label: bool = False, default_value=0):
+    def ResampleToNewSpacing(img: sitk.Image, new_spacing: tuple, is_label: bool = False, default_value=0, dtype=None):
         """
         将原图像重采样到新的分辨率
         :param img: 原图像
         :param new_spacing: 新的分辨率
         :param is_label: 是否为分割图像（决定插值方式）
         :param default_value: 空白默认值0，PET、seg为0，CT为-1024
+        :param dtype: 输出图片数据类型
         :return: 重采样后的图像
         """
         # 读取原图像的信息
@@ -72,6 +73,9 @@ class ImageResampler(Image):
         resampler.SetTransform(sitk.Transform())
         # 空白默认值
         resampler.SetDefaultPixelValue(default_value)
+        # 数据类型
+        if dtype is not None:
+            resampler.SetOutputPixelType(dtype)
         # 插值方式
         if is_label:
             resampler.SetInterpolator(sitk.sitkNearestNeighbor)

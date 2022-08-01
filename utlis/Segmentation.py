@@ -10,6 +10,7 @@
 """
 
 import os
+import re
 import filetype
 from tqdm import tqdm
 
@@ -110,7 +111,7 @@ class Jpg2niiConverter(SegmentFormatConverter):
         seg[seg <= threshold] = 0
 
         # 转换为Image
-        seg = sitk.GetImageFromArray(np.flip(seg))  # 输出需要完全翻转才能跟dcm一致
+        seg = sitk.GetImageFromArray(seg)  # 输出需要完全翻转才能跟dcm一致
         seg.CopyInformation(self.img)
         seg = sitk.Cast(image=seg, pixelID=sitk.sitkUInt8)
         # 创建保存所有器官分割结果的文件夹
@@ -133,13 +134,29 @@ class Dcm2niiConverter(SegmentFormatConverter):
         value_old = sitk.GetArrayViewFromImage(seg).max()
         if value_old != roi_value:
             seg = self.ChangeImageRoiValue(seg, value_old=value_old, value_new=roi_value)
-        # 转换为nii方向
-        seg = self.ConvertImageDcm2nii(seg, dtype=sitk.sitkUInt8)
         # 保存文件
         if not os.path.exists(os.path.dirname(fpath_save)):
             os.makedirs(os.path.dirname(fpath_save))
         sitk.WriteImage(seg, fpath_save)
         return seg
+
+
+class Hdr2niiConverter(SegmentFormatConverter):
+    def __init__(self):
+        super().__init__()
+
+    def OrganConvert(self, fpath_hdr, fpath_save):
+        seg = sitk.ReadImage(fpath_hdr)
+        sitk.WriteImage(seg, fpath_save)
+        return seg
+
+    def OrgansConvert(self, folder_hdr, folder_save):
+        for fname in os.listdir(folder_hdr):
+            if fname.split(".")[-1] == "hdr":
+                fpath_hdr = os.path.join(folder_hdr, fname)
+                fpath_save = os.path.join(folder_save, fname[0:-3] + "nii")
+                self.OrganConvert(fpath_hdr, fpath_save)
+
 
 
 class SegmentAssembleImageFilter(SegmentBase):
@@ -340,4 +357,6 @@ class SegmentSplitImageFilter(SegmentBase):
 
 if __name__ == "__main__":
 
+    c = Hdr2niiConverter()
+    c.OrganConvert(fpath_hdr=r"F:\PETCT_sorted\Anony_PETCT11604\Original\Anony_PETCT11604.Dicom.hdr", fpath_save=r"F:\PETCT_sorted\Anony_PETCT11604\CT.nii")
     pass

@@ -125,35 +125,6 @@ class DCMBase(Image):
         else:
             print()
 
-    @staticmethod
-    def ConvertImageDcm2nii(dcm: sitk.Image, dtype=None) -> sitk.Image:
-        """
-        直接将dcm读取后保存的nii在Amide中与原始图像朝向相反，需要进行翻转
-        本函数实现对读取的dcm文件进行翻转操作，使可以直接保存为nii
-        :param dcm: 原dcm图像
-        :param dtype: 可转换图片的数据类型, 默认与原图相同
-        :return: 转换后可保存为nii的图像
-        """
-        nii = sitk.GetArrayFromImage(dcm)
-        nii = np.flip(nii, axis=(1, 2))
-        nii = sitk.GetImageFromArray(nii)
-        nii.CopyInformation(dcm)
-
-        if dtype is not None:
-            nii = sitk.Cast(nii, dtype)
-
-        return nii
-
-
-class DCMFormatConverter(DCMBase):
-    def __init__(self, folder):
-        super().__init__()
-        self.img: sitk.Image = self.ReadDCMSeries(folder)
-
-    def DCM2nii(self, fpath, dtype=None):
-        img = self.ConvertImageDcm2nii(self.img, dtype=dtype)
-        sitk.WriteImage(img, fpath)
-        return img
 
 if __name__ == "__main__":
     folder_base = r"E:\SS-DCMProcessor\dataset\dcm2nii"

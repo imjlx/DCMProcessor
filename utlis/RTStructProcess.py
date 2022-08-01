@@ -168,7 +168,7 @@ class RTStructExtractor(object):
                     seg[point[2], point[1], point[0]] = self.organ_ID[organ]
         bar.close()
 
-        seg = sitk.GetImageFromArray(seg[:, ::-1, ::-1])
+        seg = sitk.GetImageFromArray(seg)
         seg.CopyInformation(self.img)
         seg = sitk.Cast(seg, sitk.sitkUInt8)
         sitk.WriteImage(image=seg, fileName=fpath)
