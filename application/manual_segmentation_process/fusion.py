@@ -12,6 +12,7 @@ import shutil
 
 import SimpleITK as sitk
 import numpy as np
+import pandas
 import pandas as pd
 import os
 from tqdm import tqdm
@@ -139,7 +140,7 @@ def assemble(folder_base):
     pass
 
 
-def resample_CT_PET(folder_base):
+def resample_CT_PET_111(folder_base):
 
     ct = sitk.ReadImage(os.path.join(folder_base, "CT_origin.nii"))
     pet = sitk.ReadImage(os.path.join(folder_base, "PET_origin.nii"))
@@ -157,12 +158,54 @@ def resample_CT_PET(folder_base):
     sitk.WriteImage(atlas, os.path.join(folder_save, "Atlas.nii"))
 
 
-if __name__ == "__main__":
+def resample_CT_PET_to_PET(folder_base):
+    ct = sitk.ReadImage(os.path.join(folder_base, "CT_origin.nii"))
+    pet = sitk.ReadImage(os.path.join(folder_base, "PET_origin.nii"))
+    atlas = sitk.ReadImage(os.path.join(folder_base, "seg_fusion.nii"))
 
-    for folder in os.listdir(r"D:\PETCT_sorted"):
-        print(folder)
-        folder = os.path.join(r"D:\PETCT_sorted", folder)
-        resample_CT_PET(folder)
+    ct = ImageResampler.ResampleToNewSpacing(ct, pet.GetSpacing(), is_label=False, default_value=-1024, dtype=sitk.sitkInt16)
+    pet = ImageResampler.ResampleToReferenceImage(pet, ref=ct, is_label=False, default_value=0, dtype=sitk.sitkFloat32)
+    atlas = ImageResampler.ResampleToNewSpacing(atlas, pet.GetSpacing(), is_label=True, default_value=0, dtype=sitk.sitkUInt8)
+
+    folder_save = os.path.join(folder_base, "resample_to_pet")
+    if not os.path.exists(folder_save):
+        os.makedirs(folder_save)
+    sitk.WriteImage(ct, os.path.join(folder_save, "CT.nii"))
+    sitk.WriteImage(pet, os.path.join(folder_save, "PET.nii"))
+    sitk.WriteImage(atlas, os.path.join(folder_save, "Atlas.nii"))
+
+
+def create_info(folder_base):
+    info: pd.DataFrame = pandas.read_excel(r"H:\info.xlsx", index_col="ID")
+    pbar = tqdm(os.listdir(folder_base))
+    for name in pbar:
+        folder_patient = os.path.join(folder_base, name)
+        # 分析分割出的器官
+        seg = sitk.ReadImage(os.path.join(folder_patient, "seg_fusion.nii"))
+        for row in info.iterrows():
+            ID = row[0]
+            if ID in sitk.GetArrayViewFromImage(seg):
+                info.loc[ID, name] = 1
+
+        # 分析原始DICOM文件
+        reader = sitk.ImageSeriesReader()
+        reader.SetFileNames(reader.GetGDCMSeriesFileNames(os.path.join(folder_patient, "CT")))
+        reader.MetaDataDictionaryArrayUpdateOn()
+        reader.Execute()
+        info.loc[1, name] = reader.GetMetaData(slice=0, key="0010|0040")    # 性别
+        info.loc[2, name] = reader.GetMetaData(slice=0, key="0010|0030")    # 出生日期
+
+    info.to_excel(r"H:\info.xlsx")
+
+
+if __name__ == "__main__":
+    folder_base = r"H:\PETCT_sorted"
+    pbar = tqdm(os.listdir(folder_base))
+    for name in pbar:
+        folder_patient = os.path.join(folder_base, name)
+        shutil.rmtree(os.path.join(folder_patient, "resample_1_1_1"))
+        shutil.rmtree(os.path.join(folder_patient, "seg_split"))
+
 
 
 
